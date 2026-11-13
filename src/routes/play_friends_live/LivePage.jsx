@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { useState, useLayoutEffect } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 import { useGreedyPigContext } from "src/context/useGreedyPigContext";
 import { LiveGameContext } from "src/context/useLiveGameContext";
 import { getInitialPlayerData } from "src/utils/live_game/getInitialData";
 
 function LiveGamePage() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => {window.scrollTo(0,0);}, [pathname]);
   const { preloadSrcList,pigPetNames } = useGreedyPigContext();
   const [playerData, setPlayerData] = useState(getInitialPlayerData(preloadSrcList.slice(0,9),pigPetNames));
   const [maxPoints, setMaxPoints] = useState(100);
