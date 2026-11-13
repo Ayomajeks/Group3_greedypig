@@ -7,6 +7,16 @@ import { useNavigate } from "react-router-dom";
 import { getInitialPlayerData } from "src/utils/live_game/getInitialData";
 import SoundSwitch from "src/components/SoundSwitch";
 import { useGreedyPigContext } from "src/context/useGreedyPigContext";
+import { useState } from "react";
+import { registerLeaderboardPlayer } from "src/utils/leaderboardAuth";
+
+function createSubmissionId() {
+  if (typeof window !== "undefined" && typeof window.crypto?.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
 
 function LiveGameSetup() {
   const {
@@ -20,26 +30,68 @@ function LiveGameSetup() {
     isContinue,
   } = useLiveGameContext();
   const navigate = useNavigate();
+  const [setupError, setSetupError] = useState("");
+  const [isRegistering, setIsRegistering] = useState(false);
   const { preloadSrcList, pigPetNames } = useGreedyPigContext();
   const pigs = preloadSrcList.filter((pig) => pig.includes("pig"));
 
-  function setupPlayers(resume) {
-    if (!resume) {
-      let newPlayerData = playerData.map((player) => {
-        let newPlayer = {
+  async function setupPlayers(resume) {
+    setSetupError("");
+
+    // Every participant must have a username.
+    const usernames = playerData.map((player) => player.name.trim());
+
+    if (usernames.some((username) => !username)) {
+      setSetupError("Every player must enter a username.");
+      return;
+    }
+
+    // Each participant must have a distinct username.
+    const uniqueUsernames = usernames.map((name) => name.toLowerCase());
+
+    if (new Set(uniqueUsernames).size !== uniqueUsernames.length) {
+      setSetupError("Each player must have a different username.");
+      return;
+    }
+
+    setIsRegistering(true);
+
+    try {
+      // Register each participant or reuse their saved identity.
+      const updatedPlayerData = await Promise.all(
+        playerData.map(async (player) => {
+          const identity = await registerLeaderboardPlayer(player.name);
+
+          return {
+            ...player,
+            backendPlayerId: identity.playerId,
+          };
+        })
+      );
+
+      if (!resume) {
+        const gameSubmissionId = createSubmissionId();
+        const newPlayerData = updatedPlayerData.map((player) => ({
           ...player,
           running_points: 0,
           total_points: 0,
-        };
-        return newPlayer;
-      });
+          gameSubmissionId,
+        }));
 
-      setDiceValue(0);
-      setIsGameOver(false);
-      setCurrentPlayer(0);
-      setPlayerData(newPlayerData);
+        setDiceValue(0);
+        setIsGameOver(false);
+        setCurrentPlayer(0);
+        setPlayerData(newPlayerData);
+      } else {
+        setPlayerData(updatedPlayerData);
+      }
+
+      navigate("/live-game/game");
+    } catch (error) {
+      setSetupError(error.message);
+    } finally {
+      setIsRegistering(false);
     }
-    navigate("/live-game/game");
   }
 
   function clearsPlayers() {
@@ -87,27 +139,39 @@ function LiveGameSetup() {
             <SoundSwitch />
           </div>
           <section className="flex gap-4 flex-wrap justify-center">
+            {setupError && (
+              <p className="text-red-400 text-center">{setupError}</p>
+            )}
             {isContinue ? (
               <>
                 <button
-                  onClick={() => {setupPlayers(false)}}
+                  disabled={isRegistering}
+                  onClick={() => {
+                    setupPlayers(false);
+                  }}
                   className="w-full md:w-fit sec-font text-xl rounded px-16 py-4 bg-[#D30CBD] font-bold  duration-500 skew-x-6 hover:skew-x-0 hover:scale-95 hover:bg-[#d30cbc] "
                 >
-                  Start New Game
+                  {isRegistering ? "Registering Players..." : "Start Game"}
                 </button>
                 <button
-                  onClick={() => {setupPlayers(true)}}
+                  disabled={isRegistering}
+                  onClick={() => {
+                    setupPlayers(true);
+                  }}
                   className="w-full md:w-fit sec-font text-xl rounded px-16 py-4 bg-[#D30CBD] font-bold  duration-500 -skew-x-6 hover:skew-x-0 hover:scale-95 hover:bg-[#d30cbc] "
                 >
-                  Resume Game
+                  {isRegistering ? "Registering Players..." : "Resume Game"}
                 </button>
               </>
             ) : (
               <button
-                onClick={() => {setupPlayers(false)}}
+                disabled={isRegistering}
+                onClick={() => {
+                  setupPlayers(false);
+                }}
                 className=" sec-font text-xl rounded px-16 py-4 bg-[#D30CBD] font-bold  duration-500 skew-x-6 hover:skew-x-0 hover:scale-95 hover:bg-[#d30cbc] "
               >
-                Start Game
+                {isRegistering ? "Registering Players..." : "Start Game"}
               </button>
             )}
           </section>
