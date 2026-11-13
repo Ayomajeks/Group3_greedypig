@@ -7,6 +7,7 @@ import ErrorPage from "./error-page";
 import LiveGameSetup from "./routes/play_friends_live/setup/Setup";
 import Home from "./routes/Home";
 import HowToPlay from "./routes/HowToPlay";
+import Tutorial from "./routes/Tutorial";
 import LiveGame from "./routes/play_friends_live/game/Game";
 import LiveGamePage from "./routes/play_friends_live/LivePage";
 
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
           {
             path: "how-to-play/",
             element: <HowToPlay />,
+          },
+          {
+            path: "tutorial/",
+            element: <Tutorial />,
           },
         ]},
       {

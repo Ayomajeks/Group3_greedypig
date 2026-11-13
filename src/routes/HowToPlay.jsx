@@ -11,7 +11,7 @@ export default function HowToPlay() {
       <nav className="fixed top-0 w-full flex justify-between p-[5%]">
         <BackButton />
         <Link
-          to={`/setup`}
+          to={`/live-game/setup`}
           className=" bg-[#D30CBD80] hover:bg-[#D30CBD] duration-300 text-white w-[48px] h-[48px] border rounded-full flex items-center justify-around"
         >
           <AiFillHome size={24} />
