@@ -13,6 +13,12 @@ export default function Navbar() {
         <img src={logo} alt="logo" width={75} />
       </a>
       <Link
+        to="/leaderboard"
+        className="text-[#ffffff] hover:underline duration-300 font-bold"
+      >
+        Leaderboard
+      </Link>
+      <Link
         to={`/live-game/how-to-play`}
         className=" text-[#ffffff] hover:underline duration-300 font-bold hidden md:flex"
       >

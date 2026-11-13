@@ -13,6 +13,7 @@ ON players (LOWER(username));
 -- Games table
 CREATE TABLE games (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    submission_id TEXT NOT NULL UNIQUE,
     status VARCHAR(20) NOT NULL DEFAULT 'in_progress'
         CHECK (status IN ('in_progress', 'completed')),
     winner_id UUID REFERENCES players(id),
