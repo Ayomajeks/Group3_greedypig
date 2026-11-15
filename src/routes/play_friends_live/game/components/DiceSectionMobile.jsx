@@ -6,6 +6,7 @@ import addPlayerSound from "src/sound_effect/add_player.mp3";
 import loseSound from "src/sound_effect/lose_sound.mp3";
 import celebrationSound from "src/sound_effect/celebration.mp3";
 import useAudio from "src/hooks/useAudio";
+import { applyRoll } from "src/utils/levels";
 
 
 function DiceSectionMobile() {
@@ -16,6 +17,7 @@ function DiceSectionMobile() {
     currentPlayer,
     setCurrentPlayer,
     maxPoints,
+    level,
     setIsGameOver,
     setDiceValue,
   } = useLiveGameContext();
@@ -67,16 +69,20 @@ function DiceSectionMobile() {
   }
   
 
-  function handleFinalDiceValue(diceValue){
-    let cp = currentPlayer;
-    let newPlayerData = [...playerData];
+  function handleFinalDiceValue(diceValue) {
+    const { busted, ...updatedPlayer } = applyRoll(
+      playerData[currentPlayer],
+      diceValue,
+      level
+    );
+    const newPlayerData = [...playerData];
+    newPlayerData[currentPlayer] = updatedPlayer;
+    setPlayerData(newPlayerData);
+    setDiceValue(diceValue);
 
-    if (diceValue === 1) {
+    if (busted) {
       loseAudio?.play();
-      newPlayerData[cp]["running_points"] = 0;
-      cp = (currentPlayer + 1) % playerData.length;
-      setCurrentPlayer(cp);
-      setDiceValue(diceValue)
+      setCurrentPlayer((currentPlayer + 1) % playerData.length);
     } else {
       setGameOverPage(
         diceValue,
@@ -86,9 +92,6 @@ function DiceSectionMobile() {
         setIsGameOver,
         celebrationAudio
       );
-      newPlayerData[cp]["running_points"] += diceValue;
-      setPlayerData(newPlayerData);
-      setDiceValue(diceValue)
     }
   }
 

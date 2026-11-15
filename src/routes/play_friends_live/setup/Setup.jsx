@@ -9,6 +9,7 @@ import SoundSwitch from "src/components/SoundSwitch";
 import { useGreedyPigContext } from "src/context/useGreedyPigContext";
 import { useState } from "react";
 import { registerLeaderboardPlayer } from "src/utils/leaderboardAuth";
+import { LEVELS } from "src/utils/levels";
 
 function createSubmissionId() {
   if (typeof window !== "undefined" && typeof window.crypto?.randomUUID === "function") {
@@ -19,16 +20,17 @@ function createSubmissionId() {
 }
 
 function LiveGameSetup() {
-  const {
-    playerData,
-    maxPoints,
-    setMaxPoints,
-    setPlayerData,
-    setDiceValue,
-    setIsGameOver,
-    setCurrentPlayer,
-    isContinue,
-  } = useLiveGameContext();
+const {
+  playerData,
+  level,
+  setLevel,
+  setMaxPoints,
+  setPlayerData,
+  setDiceValue,
+  setIsGameOver,
+  setCurrentPlayer,
+  isContinue,
+} = useLiveGameContext();
   const navigate = useNavigate();
   const [setupError, setSetupError] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
@@ -103,19 +105,33 @@ function LiveGameSetup() {
       <main className="">
         <Navbar />
         <div className="flex flex-col items-center gap-8 text-white px-[5%] md:px-[10%] py-4 ">
-          <section className="flex flex-col">
-            <label htmlFor="">Max Score</label>
-            <input
-              type="number"
-              min={25}
-              value={maxPoints}
-              onChange={(e) => {
-                setMaxPoints(e.target.value);
-              }}
-              className="p-2 bg-[#ffffff20] border rounded-md min-w-[5%] w-[250px]  "
-              required
-            />
-          </section>
+<section className="flex flex-col items-center gap-2 w-full">
+  <p>Level</p>
+  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 w-full max-w-2xl">
+    {LEVELS.map((l) => (
+      <button
+        key={l.id}
+        type="button"
+        onClick={() => {
+          setLevel(l);
+          setMaxPoints(l.target);
+        }}
+        className={`p-2 rounded-md border text-sm duration-300 ${
+          level.id === l.id
+            ? "bg-[#D30CBD] border-[#D30CBD]"
+            : "bg-[#ffffff20] hover:bg-[#ffffff40]"
+        }`}
+      >
+        <span className="block font-bold">{l.name}</span>
+        <span className="block text-xs">{l.target} pts</span>
+      </button>
+    ))}
+  </div>
+  <p className="text-xs text-center text-[#ffffffb0]">
+    Target {level.target} points. Bust on {level.bustNumbers.join(" or ")}.
+    {level.bustLosesBanked ? " A bust also wipes your banked points." : ""}
+  </p>
+</section>
           <div className=" w-full  gap-2 flow-root">
             <section className="max-h-[350px] w-full overflow-y-auto bg-[#ffffff10] border rounded-lg p-4 grid grid-cols-fluid justify-center gap-4">
               {[...playerData].map((player, index) => (
