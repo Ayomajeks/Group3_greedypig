@@ -6,6 +6,7 @@ import addPlayerSound from "src/sound_effect/add_player.mp3";
 import loseSound from "src/sound_effect/lose_sound.mp3";
 import celebrationSound from "src/sound_effect/celebration.mp3";
 import useAudio from "src/hooks/useAudio";
+import { applyRoll } from "src/utils/levels";
 
 function DiceSection() {
   const {
@@ -15,6 +16,7 @@ function DiceSection() {
     currentPlayer,
     setCurrentPlayer,
     maxPoints,
+    level,
     setIsGameOver,
     setDiceValue,
   } = useLiveGameContext();
@@ -66,15 +68,19 @@ function DiceSection() {
   }
 
   function handleFinalDiceValue(diceValue) {
-    let cp = currentPlayer;
-    let newPlayerData = [...playerData];
+    const { busted, ...updatedPlayer } = applyRoll(
+      playerData[currentPlayer],
+      diceValue,
+      level
+    );
+    const newPlayerData = [...playerData];
+    newPlayerData[currentPlayer] = updatedPlayer;
+    setPlayerData(newPlayerData);
+    setDiceValue(diceValue);
 
-    if (diceValue === 1) {
+    if (busted) {
       loseAudio?.play();
-      newPlayerData[cp]["running_points"] = 0;
-      cp = (currentPlayer + 1) % playerData.length;
-      setCurrentPlayer(cp);
-      setDiceValue(diceValue)
+      setCurrentPlayer((currentPlayer + 1) % playerData.length);
     } else {
       setGameOverPage(
         diceValue,
@@ -84,12 +90,8 @@ function DiceSection() {
         setIsGameOver,
         celebrationAudio
       );
-      newPlayerData[cp]["running_points"] += diceValue;
-      setPlayerData(newPlayerData);
-      setDiceValue(diceValue)
     }
   }
-
   return (
     <div className="h-screen border-r-[#ffffff40] border-r hidden md:flex flex-col items-center justify-around p-8 sticky top-0 bg-[#00000010] ">
       <Dice
